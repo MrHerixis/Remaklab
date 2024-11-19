@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remaklab Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #181818;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .calculator {
+            width: 600px;
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .display {
+            width: calc(100% - 20px);
+            height: 60px;
+            background: #000;
+            color: white;
+            font-size: 24px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            text-align: right;
+            margin: 0 auto 20px auto;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .button {
+            background: #333;
+            color: white;
+            font-size: 18px;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .button:hover {
+            background: #444;
+        }
+
+        .operator {
+            background: #f89c42;
+        }
+
+        .operator:hover {
+            background: #e87e00;
+        }
+
+        .equals {
+            background: #4CAF50;
+            grid-column: span 2;
+            height: 100%;
+        }
+
+        .equals:hover {
+            background: #45a049;
+        }
+
+        .wide {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" id="display" class="display" value="0" readonly>
+        <div class="buttons">
+            <button class="button" onclick="clearDisplay()">AC</button>
+            <button class="button" onclick="toggleMode()">Rad</button>
+            <button class="button" onclick="appendToDisplay('(')">(</button>
+            <button class="button" onclick="appendToDisplay(')')">)</button>
+            <button class="button operator" onclick="appendToDisplay('/')">÷</button>
+            
+            <button class="button" onclick="appendToDisplay('sin(')">sin</button>
+            <button class="button" onclick="appendToDisplay('cos(')">cos</button>
+            <button class="button" onclick="appendToDisplay('tan(')">tan</button>
+            <button class="button" onclick="appendToDisplay('π')">π</button>
+            <button class="button operator" onclick="appendToDisplay('*')">×</button>
+
+            <button class="button" onclick="appendToDisplay('7')">7</button>
+            <button class="button" onclick="appendToDisplay('8')">8</button>
+            <button class="button" onclick="appendToDisplay('9')">9</button>
+            <button class="button operator" onclick="appendToDisplay('-')">−</button>
+            <button class="button" onclick="appendToDisplay('x!')">x!</button>
+
+            <button class="button" onclick="appendToDisplay('4')">4</button>
+            <button class="button" onclick="appendToDisplay('5')">5</button>
+            <button class="button" onclick="appendToDisplay('6')">6</button>
+            <button class="button operator" onclick="appendToDisplay('+')">+</button>
+            <button class="button" onclick="appendToDisplay('ln(')">ln</button>
+
+            <button class="button" onclick="appendToDisplay('1')">1</button>
+            <button class="button" onclick="appendToDisplay('2')">2</button>
+            <button class="button" onclick="appendToDisplay('3')">3</button>
+            <button class="button" onclick="appendToDisplay('^')">xʸ</button>
+            <button class="button" onclick="appendToDisplay('log(')">log</button>
+
+            <button class="button wide" onclick="appendToDisplay('0')">0</button>
+            <button class="button" onclick="appendToDisplay('.')">.</button>
+            <button class="button equals" onclick="calculateResult()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '';
+        let mode = 'Rad';
+        let lastResult = 0;
+
+        function appendToDisplay(value) {
+            if (currentInput === '0') {
+                currentInput = '';
+            }
+            if (value === 'x!') {
+                currentInput = factorial(lastResult || currentInput);
+            } else {
+                currentInput += value;
+            }
+            document.getElementById('display').value = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            document.getElementById('display').value = currentInput;
+        }
+
+        function toggleMode() {
+            mode = mode === 'Rad' ? 'Deg' : 'Rad';
+            document.querySelector('button[onclick="toggleMode()"]').textContent = mode;
+        }
+
+        function calculateResult() {
+            try {
+                let expression = currentInput.replace('π', Math.PI).replace('e', Math.E);
+                
+                // Correcting trig functions based on mode
+                if (mode === 'Deg') {
+                    expression = expression.replace(/sin\((.*?)\)/g, (_, a) => `Math.sin(${toRadians(a)})`);
+                    expression = expression.replace(/cos\((.*?)\)/g, (_, a) => `Math.cos(${toRadians(a)})`);
+                    expression = expression.replace(/tan\((.*?)\)/g, (_, a) => `Math.tan(${toRadians(a)})`);
+                } else {
+                    expression = expression.replace(/sin\((.*?)\)/g, (_, a) => `Math.sin(${a})`);
+                    expression = expression.replace(/cos\((.*?)\)/g, (_, a) => `Math.cos(${a})`);
+                    expression = expression.replace(/tan\((.*?)\)/g, (_, a) => `Math.tan(${a})`);
+                }
+                
+                expression = expression.replace(/log\((.*?)\)/g, (_, a) => `Math.log10(${a})`);
+                expression = expression.replace(/ln\((.*?)\)/g, (_, a) => `Math.log(${a})`);
+                expression = expression.replace(/\^/g, '**');
+                
+                let result = eval(expression);
+                lastResult = result;
+                document.getElementById('display').value = result;
+                currentInput = result.toString();
+            } catch (e) {
+                document.getElementById('display').value = 'Error';
+                currentInput = '';
+            }
+        }
+
+        function toRadians(degrees) {
+            return (degrees * Math.PI) / 180;
+        }
+
+        function factorial(num) {
+            num = parseFloat(num);
+            if (num < 0 || isNaN(num)) return 'Error';
+            if (num === 0) return 1;
+            return Array.from({ length: num }, (_, i) => i + 1).reduce((acc, val) => acc * val, 1);
+        }
+    </script>
+</body>
+</html>
